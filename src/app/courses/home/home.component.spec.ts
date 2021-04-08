@@ -1,4 +1,4 @@
-import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import {ComponentFixture, fakeAsync, flush, TestBed, waitForAsync} from '@angular/core/testing';
 import {DebugElement} from '@angular/core';
 
 import {HomeComponent} from './home.component';
@@ -72,7 +72,7 @@ describe('HomeComponent', () => {
     expect(tabs.length).toBe(2, 'Expected to find 2 number tabs');
   });
 
-  it('should display advanced courses when tab clicked', (done: DoneFn) => {
+  it('should display advanced courses when tab clicked - fakeAsync', fakeAsync(() => {
     coursesService.findAllCourses.and.returnValue(of(setupCourses()));
     fixture.detectChanges();
 
@@ -80,13 +80,25 @@ describe('HomeComponent', () => {
     tabs[1].triggerEventHandler('click', {button: 0});
     fixture.detectChanges();
 
-    setTimeout(() => {
+    flush();
+
+    const cardTitles = el.queryAll(By.css('.mat-tab-body-active .mat-card-title'));
+    expect(cardTitles.length).toBeGreaterThan(0, 'Could not find card titles');
+    expect(cardTitles[0].nativeElement.textContent).toContain('Angular Security Course');
+  }));
+
+  it('should display advanced courses when tab clicked - waitForAsync', waitForAsync(() => {
+    coursesService.findAllCourses.and.returnValue(of(setupCourses()));
+    fixture.detectChanges();
+
+    const tabs = el.queryAll(By.css('.mat-tab-label'));
+    tabs[1].triggerEventHandler('click', {button: 0});
+    fixture.detectChanges();
+
+    fixture.whenStable().then(() => {
       const cardTitles = el.queryAll(By.css('.mat-tab-body-active .mat-card-title'));
       expect(cardTitles.length).toBeGreaterThan(0, 'Could not find card titles');
       expect(cardTitles[0].nativeElement.textContent).toContain('Angular Security Course');
-      done();
-    }, 500);
-  });
+    });
+  }));
 });
-
-
